@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JIBU - Your Government. Your Right to Know. Just Ask.</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/kenya-map-svg@1.0.1/dist/kenya.min.js"></script>
+  <style id="app-style">
+    :root {
+      --kenyan-red: #ce1126;
+      --kenyan-green: #008751;
+      --kenyan-black: #000000;
+      --kenyan-white: #ffffff;
+      --kenyan-accent: #f5a623;
+    }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      color: #333;
+      background-color: #f9f9f9;
+    }
+    
+    .hero-section {
+      background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
+                  url('https://cdn.pixabay.com/photo/2016/11/14/03/29/mount-kenya-1822748_1280.jpg');
+      background-size: cover;
+      background-position: center;
+      height: 80vh;
+      position: relative;
+    }
+
+    .hero-pattern {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    
+    .btn-primary {
+      background-color: var(--kenyan-green);
+      border-radius: 30px;
+      padding: 0.75rem 2rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+      background-color: #006e40;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(0, 135, 81, 0.2);
+    }
+
+    .btn-secondary {
+      background-color: var(--kenyan-black);
+      border-radius: 30px;
+      padding: 0.75rem 2rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-secondary:hover {
+      background-color: #333;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+    }
+
+    .accent-bar {
+      width: 100%;
+      height: 8px;
+      background: linear-gradient(to right, var(--kenyan-black) 25%, var(--kenyan-red) 25%, var(--kenyan-red) 50%, var(--kenyan-green) 50%, var(--kenyan-green) 75%, var(--kenyan-white) 75%);
+    }
+    
+    .navbar-link {
+      position: relative;
+      padding: 0.5rem 1rem;
+      font-weight: 500;
+    }
+    
+    .navbar-link::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 3px;
+      bottom: 0;
+      left: 0;
+      background-color: var(--kenyan-red);
+      transition: width 0.3s ease;
+    }
+    
+    .navbar-link:hover::after {
+      width: 100%;
+    }
+
+    .navbar-link.active::after {
+      width: 100%;
+    }
+    
+    .language-selector {
+      position: relative;
+    }
+    
+    .language-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      width: 200px;
+      max-height: 300px;
+      overflow-y: auto;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      z-index: 50;
+      display: none;
+    }
+    
+    .language-dropdown.active {
+      display: block;
+    }
+    
+    .county-selector {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      z-index: 30;
+    }
+    
+    .county-dropdown {
+      position: absolute;
+      bottom: 100%;
+      right: 0;
+      width: 300px;
+      max-height: 400px;
+      overflow-y: auto;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      margin-bottom: 1rem;
+      display: none;
+      z-index: 40;
+    }
+    
+    .county-dropdown.active {
+      display: block;
+    }
+
+    .county-map {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.8);
+      z-index: 50;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .county-map.active {
+      display: flex;
+    }
+
+    .map-container {
+      width: 80%;
+      max-width: 800px;
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      position: relative;
+    }
+
+    .map-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: var(--kenyan-black);
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
+    
+    .chat-input {
+      border-radius: 30px;
+      padding: 1rem 1.5rem;
+      border: 2px solid #e5e5e5;
+      transition: all 0.3s ease;
+    }
+    
+    .chat-input:focus {
+      border-color: var(--kenyan-green);
+      box-shadow: 0 0 0 3px rgba(0, 135, 81, 0.2);
+      outline: none;
+    }
+    
+    .mic-button {
+      position: absolute;
+      right: 1.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: var(--kenyan-red);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .mic-button:hover {
+      background-color: #a70d1e;
+    }
+    
+    .mic-button.listening {
+      animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(206, 17, 38, 0.7);
+      }
+      70% {
+        box-shadow: 0 0 0 10px rgba(206, 17, 38, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(206, 17, 38, 0);
+      }
+    }
+    
+    .answer-card {
+      border-radius: 12px;
+      background-color: white;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+    
+    .answer-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .source-link {
+      color: var(--kenyan-green);
+      text-decoration: underline;
+      font-weight: 500;
+    }
+    
+    .history-item {
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      margin-bottom: 0.5rem;
+      background-color: #f3f4f6;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .history-item:hover {
+      background-color: #e5e7eb;
+    }
+
+    .content-section {
+      padding: 4rem 0;
+    }
+
+    .section-title {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+    }
+
+    .section-title::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 80px;
+      height: 4px;
+      background-color: var(--kenyan-red);
+    }
+
+    .feature-card {
+      border-radius: 12px;
+      padding: 2rem;
+      background-color: white;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      height: 100%;
+      transition: all 0.3s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    .feature-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background-color: rgba(0, 135, 81, 0.1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      color: var(--kenyan-green);
+      font-size: 1.5rem;
+    }
+
+    .stat-card {
+      background-color: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      height: 100%;
+    }
+
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--kenyan-green);
+    }
+
+    .about-section {
+      background-color: #f3f4f6;
+    }
+
+    .team-member {
+      text-align: center;
+    }
+
+    .team-photo {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 1rem;
+      border: 5px solid white;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .social-icon {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      width: 36px;
+      height: 36px;
+      background-color: var(--kenyan-black);
+      color: white;
+      border-radius: 50%;
+      margin: 0 0.25rem;
+      transition: all 0.3s ease;
+    }
+
+    .social-icon:hover {
+      transform: translateY(-3px);
+      background-color: var(--kenyan-red);
+    }
+
+    footer {
+      background-color: #2d3748;
+      color: white;
+    }
+
+    .footer-link {
+      color: #cbd5e0;
+      transition: color 0.3s ease;
+    }
+
+    .footer-link:hover {
+      color: white;
+    }
+
+    /* Mobile-first media queries */
+    @media (min-width: 768px) {
+      .chat-container {
+        height: calc(100vh - 80px);
+      }
+    }
+    
+    @media (max-width: 767px) {
+      .hero-section {
+        height: 70vh;
+      }
+      
+      .county-selector {
+        bottom: 1rem;
+        right: 1rem;
+      }
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.5s ease forwards;
+    }
+
+    /* Theme styles for different views */
+    .app-view {
+      display: none;
+    }
+
+    .app-view.active {
+      display: block;
+    }
+
+    #loading-indicator {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      display: none;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid rgba(0, 135, 81, 0.2);
+      border-top-color: var(--kenyan-green);
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading indicator -->
+  <div id="loading-indicator">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="bg-white shadow-md sticky top-0 z-40">
+    <div class="accent-bar"></div>
+    <div class="container mx-auto px-4 py-3">
+      <div class="flex justify-between items-center">
+        <a href="javascript:void(0)" onclick="showView('home')" class="flex items-center">
+          <span class="text-3xl font-bold text-gray-900">JIBU</span>
+          <span class="ml-2 text-xs bg-green-600 text-white px-2 py-1 rounded">BETA</span>
+        </a>
+        <div class="hidden md:flex items-center space-x-4">
+          <a href="javascript:void(0)" onclick="showView('home')" class="navbar-link active" data-view="home">Home</a>
+          <a href="javascript:void(0)" onclick="showView('chat')" class="navbar-link" data-view="chat">Ask JIBU</a>
+          <a href="javascript:void(0)" onclick="showView('about')" class="navbar-link" data-view="about">About</a>
+          <div class="language-selector ml-4">
+            <button id="language-button" class="flex items-center space-x-2 bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-full">
+              <img src="https://cdn.pixabay.com/photo/2013/07/13/14/15/kenya-162331_1280.png" alt="Kenya Flag" class="w-5 h-5">
+              <span class="text-sm font-medium">English</span>
+              <i class="fas fa-chevron-down text-xs"></i>
+            </button>
+            <div class="language-dropdown" id="language-dropdown">
+              <div class="p-2">
+                <input type="text" placeholder="Search language..." class="w-full p-2 border rounded mb-2 text-sm">
+                <div class="space-y-1 max-h-60 overflow-y-auto">
+                  <button class="w-full text-left p-2 hover:bg-gray-100 rounded text-sm active">English</button>
+                  <button class="w-full text-left p-2 hover:bg-gray-100 rounded text-sm">Kiswahili</button>
+                  <button class="w-full text-left p-2 hover:bg-gray-100 rounded text-sm">Kikuyu</button>
+                  <button class="w-full text-left p-2 hover:bg-gray-100 rounded text-sm">Luo</button>
+                  <button class="w-full text-left p-2 hover:bg-gray-100 rounded text-sm">Kalenjin</button>
+                  <button class="w-full text-left p-2 hover:bg-gray-100 rounded text-sm">Luhya</button>
+                  <button class="w-full text-left p-2 hover:bg-gray-100 rounded text-sm">Kamba</button>
+                  <button class="w-full text-left p-2 hover:bg-gray-100 rounded text-sm">Somali</button>
+                  <!-- Other languages would be listed here -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="md:hidden">
+          <button id="mobile-menu-button" class="text-gray-500 hover:text-gray-700 focus:outline-none">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <!-- Mobile menu -->
+      <div id="mobile-menu" class="md:hidden hidden mt-4">
+        <div class="flex flex-col space-y-2">
+          <a href="javascript:void(0)" onclick="showView('home')" class="px-4 py-2 text-gray-800 hover:bg-gray-100 rounded" data-view="home">Home</a>
+          <a href="javascript:void(0)" onclick="showView('chat')" class="px-4 py-2 text-gray-800 hover:bg-gray-100 rounded" data-view="chat">Ask JIBU</a>
+          <a href="javascript:void(0)" onclick="showView('about')" class="px-4 py-2 text-gray-800 hover:bg-gray-100 rounded" data-view="about">About</a>
+          <button class="flex items-center justify-between px-4 py-2 text-gray-800 hover:bg-gray-100 rounded">
+            <div class="flex items-center">
+              <img src="https://cdn.pixabay.com/photo/2013/07/13/14/15/kenya-162331_1280.png" alt="Kenya Flag" class="w-5 h-5 mr-2">
+              <span>English</span>
+            </div>
+            <i class="fas fa-chevron-down text-xs"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Home View -->
+  <div class="app-view active" id="home-view">
+    <!-- Hero Section -->
+    <section class="hero-section flex items-center justify-center text-center">
+      <div class="hero-pattern"></div>
+      <div class="container mx-auto px-4 relative z-10">
+        <h1 class="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">Your Government. <br>Your Right to Know. <br>Just Ask.</h1>
+        <p class="text-xl md:text-2xl text-gray-200 mb-8 max-w-2xl mx-auto">Get instant, verified answers about public services, policies, and projects from all levels of Kenyan government.</p>
+        <div class="flex flex-col md:flex-row justify-center gap-4">
+          <button onclick="showView('chat')" class="btn-primary text-white">
+            <i class="fas fa-comments mr-2"></i>Start Asking
+          </button>
+          <button onclick="showView('about')" class="btn-secondary text-white">
+            <i class="fas fa-info-circle mr-2"></i>Learn More
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="content-section bg-white">
+      <div class="container mx-auto px-4">
+        <h2 class="text-3xl font-bold text-center section-title mx-auto">How JIBU Works</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-search"></i>
+            </div>
+            <h3 class="text-xl font-semibold mb-3">Ask Questions</h3>
+            <p class="text-gray-600">Ask questions in your preferred language about any government service, policy, or project using text or voice.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-robot"></i>
+            </div>
+            <h3 class="text-xl font-semibold mb-3">AI-Powered Answers</h3>
+            <p class="text-gray-600">Get instant, simplified responses backed by verified government data and official documents.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-map-marked-alt"></i>
+            </div>
+            <h3 class="text-xl font-semibold mb-3">County-Specific</h3>
+            <p class="text-gray-600">Filter information by any of Kenya's 47 counties to get localized answers relevant to your area.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="content-section bg-gray-100">
+      <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div class="stat-card">
+            <p class="stat-number">42+</p>
+            <p class="text-gray-600">Supported Languages</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-number">47</p>
+            <p class="text-gray-600">Counties Covered</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-number">1000+</p>
+            <p class="text-gray-600">Daily Questions</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-number">98%</p>
+            <p class="text-gray-600">User Satisfaction</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Featured Topics Section -->
+    <section class="content-section bg-white">
+      <div class="container mx-auto px-4">
+        <h2 class="text-3xl font-bold section-title">Popular Topics</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+          <a href="javascript:void(0)" onclick="showView('chat'); setQuery('How do I apply for a national ID card?')" class="answer-card p-6 cursor-pointer">
+            <h3 class="text-xl font-semibold mb-2">National ID Application</h3>
+            <p class="text-gray-600 mb-4">Learn about the requirements and process for applying for a national ID card.</p>
+            <span class="text-green-600 font-medium">Ask about this <i class="fas fa-arrow-right ml-1"></i></span>
+          </a>
+          <a href="javascript:void(0)" onclick="showView('chat'); setQuery('What business permits do I need to start a small shop?')" class="answer-card p-6 cursor-pointer">
+            <h3 class="text-xl font-semibold mb-2">Business Permits</h3>
+            <p class="text-gray-600 mb-4">Understand the permits and licenses needed to start and operate a business.</p>
+            <span class="text-green-600 font-medium">Ask about this <i class="fas fa-arrow-right ml-1"></i></span>
+          </a>
+          <a href="javascript:void(0)" onclick="showView('chat'); setQuery('How do I register for NHIF health insurance?')" class="answer-card p-6 cursor-pointer">
+            <h3 class="text-xl font-semibold mb-2">NHIF Registration</h3>
+            <p class="text-gray-600 mb-4">Find out how to register for the National Hospital Insurance Fund.</p>
+            <span class="text-green-600 font-medium">Ask about this <i class="fas fa-arrow-right ml-1"></i></span>
+          </a>
+          <a href="javascript:void(0)" onclick="showView('chat'); setQuery('What are the land ownership laws in Kenya?')" class="answer-card p-6 cursor-pointer">
+            <h3 class="text-xl font-semibold mb-2">Land Ownership</h3>
+            <p class="text-gray-600 mb-4">Understand Kenya's land ownership laws and registration process.</p>
+            <span class="text-green-600 font-medium">Ask about this <i class="fas fa-arrow-right ml-1"></i></span>
+          </a>
+          <a href="javascript:void(0)" onclick="showView('chat'); setQuery('How do I get a driving license?')" class="answer-card p-6 cursor-pointer">
+            <h3 class="text-xl font-semibold mb-2">Driving License</h3>
+            <p class="text-gray-600 mb-4">Learn about the process of obtaining a driving license in Kenya.</p>
+            <span class="text-green-600 font-medium">Ask about this <i class="fas fa-arrow-right ml-1"></i></span>
+          </a>
+          <a href="javascript:void(0)" onclick="showView('chat'); setQuery('What education scholarships are available?')" class="answer-card p-6 cursor-pointer">
+            <h3 class="text-xl font-semibold mb-2">Education Scholarships</h3>
+            <p class="text-gray-600 mb-4">Discover available scholarships and education funding opportunities.</p>
+            <span class="text-green-600 font-medium">Ask about this <i class="fas fa-arrow-right ml-1"></i></span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="content-section bg-green-600 text-white">
+      <div class="container mx-auto px-4 text-center py-16">
+        <h2 class="text-3xl md:text-4xl font-bold mb-6">Ready to Get Answers?</h2>
+        <p class="text-xl mb-8 max-w-2xl mx-auto">Start asking questions about government services, policies, and projects and get verified answers instantly.</p>
+        <button onclick="showView('chat')" class="bg-white text-green-600 px-8 py-3 rounded-full font-bold text-lg hover:bg-gray-100 transition duration-300">
+          Ask JIBU Now
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <!-- Chat View -->
+  <div class="app-view" id="chat-view">
+    <div class="chat-container container mx-auto px-4 py-6">
+      <div class="flex flex-col md:flex-row md:space-x-6">
+        <!-- Left column - Chat input and history -->
+        <div class="md:w-1/3">
+          <h2 class="text-2xl font-bold mb-6">Ask JIBU</h2>
+          <div class="relative mb-4">
+            <input type="text" id="chat-input" class="chat-input w-full pr-12" placeholder="Type your question here...">
+            <div class="mic-button" id="mic-button">
+              <i class="fas fa-microphone text-white"></i>
+            </div>
+          </div>
+          <button id="send-button" class="btn-primary text-white w-full mb-6">
+            <i class="fas fa-paper-plane mr-2"></i>Send Question
+          </button>
+          <div class="mb-6">
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="font-semibold">Recent Questions</h3>
+              <button id="clear-history" class="text-sm text-red-600 hover:text-red-800">
+                <i class="fas fa-trash-alt mr-1"></i>Clear
+              </button>
+            </div>
+            <div id="history-list" class="space-y-2 max-h-96 overflow-y-auto">
+              <!-- History items will be dynamically added here -->
+            </div>
+          </div>
+        </div>
+        
+        <!-- Right column - Answer display -->
+        <div class="md:w-2/3">
+          <div class="bg-gray-100 rounded-lg p-6 mb-6">
+            <div id="current-county" class="text-sm text-gray-600 mb-2">
+              <i class="fas fa-map-marker-alt mr-1"></i>Showing answers for: <strong>All Counties</strong>
+            </div>
+            <div id="current-language" class="text-sm text-gray-600">
+              <i class="fas fa-language mr-1"></i>Language: <strong>English</strong>
+            </div>
+          </div>
+          
+          <div id="answers-container" class="space-y-6">
+            <div class="answer-card p-6">
+              <p class="text-lg font-medium mb-2">Welcome to JIBU!</p>
+              <div class="text-gray-700">
+                <p class="mb-4">I'm here to provide you with instant, verified information about Kenyan government services, policies, projects, and initiatives.</p>
+                <p class="mb-4">You can ask me questions about:</p>
+                <ul class="list-disc pl-5 mb-4 space-y-1">
+                  <li>How to apply for government documents (ID, passport, etc.)</li>
+                  <li>Business registration and licensing</li>
+                  <li>Tax information and procedures</li>
+                  <li>Public services in your county</li>
+                  <li>Government projects and initiatives</li>
+                  <li>And much more!</li>
+                </ul>
+                <p>Type your question in the input box or use the microphone button to ask with your voice.</p>
+              </div>
+              <div class="mt-4 flex justify-end">
+                <button class="text-sm bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-full">
+                  <i class="fas fa-volume-up mr-1"></i>Read Aloud
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- County selector -->
+    <div class="county-selector">
+      <button id="county-selector-button" class="bg-white text-gray-800 rounded-full w-14 h-14 shadow-lg flex items-center justify-center hover:bg-gray-100">
+        <i class="fas fa-map-marker-alt text-2xl text-green-600"></i>
+      </button>
+      <div class="county-dropdown" id="county-dropdown">
+        <div class="p-4">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold">Select County</h3>
+            <button id="view-map" class="text-sm text-green-600">
+              <i class="fas fa-map mr-1"></i>View Map
+            </button>
+          </div>
+          <input type="text" placeholder="Search counties..." class="w-full p-2 border rounded mb-3 text-sm">
+          <div class="space-y-1 max-h-60 overflow-y-auto">
+            <button class="w-full text-left p-2 hover:bg-gray-100 rounded text-sm active">All Counties</button>
+            <button class="w-full text-left p-2 hover:bg-gray-100 rounded text-sm">Nairobi</button>
+            <button class="w-full text-left p-2 hover:bg-gray-100 rounded text-sm">Mombasa</button>
+            <button class="w-full text-left p-2 hover:bg-gray-100 rounded text-sm">Kisumu</button>
+            <button class="w-full text-left p-2 hover:bg-gray-100 rounded text-sm">Nakuru</button>
+            <!-- Other counties would be listed here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- About View -->
+  <div class="app-view" id="about-view">
+    <!-- Hero section -->
+    <section class="bg-gray-100 py-16">
+      <div class="container mx-auto px-4">
+        <div class="max-w-3xl mx-auto text-center">
+          <h1 class="text-4xl font-bold mb-6">About JIBU</h1>
+          <p class="text-xl text-gray-700 mb-8">Empowering Kenyan citizens with access to reliable government information in their preferred language.</p>
+          <div class="flex justify-center space-x-4">
+            <span class="bg-green-600 text-white px-4 py-2 rounded-full">Transparency</span>
+            <span class="bg-red-600 text-white px-4 py-2 rounded-full">Accessibility</span>
+            <span class="bg-black text-white px-4 py-2 rounded-full">Inclusivity</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mission section -->
+    <section class="content-section bg-white">
+      <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+          <div>
+            <h2 class="text-3xl font-bold section-title">Our Mission</h2>
+            <p class="text-gray-700 mb-6">JIBU was created to bridge the information gap between government and citizens. Our mission is to make government information accessible to all Kenyans regardless of language, education level, or technological access.</p>
+            <p class="text-gray-700 mb-6">We believe that access to accurate government information is a fundamental right that empowers citizens to participate in civic processes, access public services, and hold institutions accountable.</p>
+            <div class="space-y-4">
+              <div class="flex items-start">
+                <div class="mt-1 mr-4 text-green-600">
+                  <i class="fas fa-check-circle text-xl"></i>
+                </div>
+                <div>
+                  <h3 class="font-semibold mb-1">Simplifying Complex Information</h3>
+                  <p class="text-gray-600">Making government policies and procedures easy to understand for all citizens.</p>
+                </div>
+              </div>
+              <div class="flex items-start">
+                <div class="mt-1 mr-4 text-green-600">
+                  <i class="fas fa-check-circle text-xl"></i>
+                </div>
+                <div>
+                  <h3 class="font-semibold mb-1">Language Inclusivity</h3>
+                  <p class="text-gray-600">Breaking language barriers by providing information in 42+ Kenyan languages.</p>
+                </div>
+              </div>
+              <div class="flex items-start">
+                <div class="mt-1 mr-4 text-green-600">
+                  <i class="fas fa-check-circle text-xl"></i>
+                </div>
+                <div>
+                  <h3 class="font-semibold mb-1">Accessibility For All</h3>
+                  <p class="text-gray-600">Ensuring that people with disabilities can access government information easily.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <img src="https://cdn.pixabay.com/photo/2017/08/07/08/08/team-2601507_1280.jpg" alt="JIBU Team" class="rounded-lg shadow-lg">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How it works section -->
+    <section class="content-section bg-gray-100">
+      <div class="container mx-auto px-4">
+        <h2 class="text-3xl font-bold section-title mb-12 mx-auto text-center">How JIBU Works</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="bg-white p-6 rounded-lg shadow-md">
+            <div class="w-12 h-12 bg-green-600 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4">1</div>
+            <h3 class="text-xl font-semibold mb-3">Data Collection & Verification</h3>
+            <p class="text-gray-600">We gather official information from government agencies, verify its accuracy with experts, and organize it in our database.</p>
+          </div>
+          <div class="bg-white p-6 rounded-lg shadow-md">
+            <div class="w-12 h-12 bg-green-600 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4">2</div>
+            <h3 class="text-xl font-semibold mb-3">AI Processing</h3>
+            <p class="text-gray-600">Our AI analyzes user questions, matches them with verified information, and generates clear, accessible answers in the user's preferred language.</p>
+          </div>
+          <div class="bg-white p-6 rounded-lg shadow-md">
+            <div class="w-12 h-12 bg-green-600 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4">3</div>
+            <h3 class="text-xl font-semibold mb-3">Continuous Improvement</h3>
+            <p class="text-gray-600">We regularly update our database with new information and improve our AI based on user feedback to provide better answers.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Data sources section -->
+    <section class="content-section bg-white">
+      <div class="container mx-auto px-4">
+        <h2 class="text-3xl font-bold section-title">Our Data Sources</h2>
+        <p class="text-gray-700 mb-8">JIBU provides information sourced directly from official government channels and verified by experts.</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="border border-gray-200 rounded-lg p-4">
+            <h3 class="font-semibold mb-2">National Government</h3>
+            <ul class="text-gray-600 space-y-1">
+              <li>• Official ministry websites</li>
+              <li>• Government gazettes</li>
+              <li>• National policy documents</li>
+              <li>• Parliamentary records</li>
+            </ul>
+          </div>
+          <div class="border border-gray-200 rounded-lg p-4">
+            <h3 class="font-semibold mb-2">County Governments</h3>
+            <ul class="text-gray-600 space-y-1">
+              <li>• County official websites</li>
+              <li>• County integrated development plans</li>
+              <li>• County budget documents</li>
+              <li>• County assembly records</li>
+            </ul>
+          </div>
+          <div class="border border-gray-200 rounded-lg p-4">
+            <h3 class="font-semibold mb-2">Government Agencies</h3>
+            <ul class="text-gray-600 space-y-1">
+              <li>• Kenya Revenue Authority</li>
+              <li>• National Hospital Insurance Fund</li>
+              <li>• National Social Security Fund</li>
+              <li>• eCitizen portal</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Team section -->
+    <section class="content-section bg-gray-100">
+      <div class="container mx-auto px-4">
+        <h2 class="text-3xl font-bold section-title text-center mx-auto">Our Team</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-12">
+          <div class="team-member">
+            <img src="https://cdn.pixabay.com/photo/2017/08/01/08/29/woman-2563491_1280.jpg" alt="Sarah Kamau" class="team-photo">
+            <h3 class="text-xl font-semibold">Sarah Kamau</h3>
+            <p class="text-gray-600 mb-3">Project Director</p>
+            <div class="flex justify-center">
+              <a href="javascript:void(0)" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+              <a href="javascript:void(0)" class="social-icon"><i class="fab fa-twitter"></i></a>
+            </div>
+          </div>
+          <div class="team-member">
+            <img src="https://cdn.pixabay.com/photo/2017/08/01/08/29/people-2563491_1280.jpg" alt="James Ochieng" class="team-photo">
+            <h3 class="text-xl font-semibold">James Ochieng</h3>
+            <p class="text-gray-600 mb-3">Lead Developer</p>
+            <div class="flex justify-center">
+              <a href="javascript:void(0)" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+              <a href="javascript:void(0)" class="social-icon"><i class="fab fa-github"></i></a>
+            </div>
+          </div>
+          <div class="team-member">
+            <img src="https://cdn.pixabay.com/photo/2017/08/01/08/29/woman-2563491_1280.jpg" alt="Aisha Mohammed" class="team-photo">
+            <h3 class="text-xl font-semibold">Aisha Mohammed</h3>
+            <p class="text-gray-600 mb-3">Data Science Lead</p>
+            <div class="flex justify-center">
+              <a href="javascript:void(0)" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+              <a href="javascript:void(0)" class="social-icon"><i class="fab fa-twitter"></i></a>
+            </div>
+          </div>
+          <div class="team-member">
+            <img src="https://cdn.pixabay.com/photo/2017/08/01/08/29/people-2563491_1280.jpg" alt="Daniel Kiprop" class="team-photo">
+            <h3 class="text-xl font-semibold">Daniel Kiprop</h3>
+            <p class="text-gray-600 mb-3">Language Expert</p>
+            <div class="flex justify-center">
+              <a href="javascript:void(0)" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+              <a href="javascript:void(0)" class="social-icon"><i class="fab fa-twitter"></i></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Partners section -->
+    <section class="content-section bg-white">
+      <div class="container mx-auto px-4 text-center">
+        <h2 class="text-3xl font-bold section-title mx-auto">Our Partners</h2>
+        <p class="text-gray-700 mb-10 max-w-3xl mx-auto">JIBU works with government agencies, civil society organizations, and technology partners to provide accurate and accessible information.</p>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div class="flex justify-center items-center h-24">
+            <img src="https://cdn.pixabay.com/photo/2016/12/19/03/14/kenya-government-1917773_1280.png" alt="Kenya Government" class="h-16">
+          </div>
+          <div class="flex justify-center items-center h-24">
+            <img src="https://cdn.pixabay.com/photo/2016/09/28/02/14/tech-logo-1699635_1280.png" alt="Tech Partner" class="h-16">
+          </div>
+          <div class="flex justify-center items-center h-24">
+            <img src="https://cdn.pixabay.com/photo/2017/01/31/13/14/animal-2023924_1280.png" alt="NGO Partner" class="h-16">
+          </div>
+          <div class="flex justify-center items-center h-24">
+            <img src="https://cdn.pixabay.com/photo/2017/03/16/21/18/logo-2150297_1280.png" alt="University Partner" class="h-16">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact section -->
+    <section class="content-section bg-green-600 text-white">
+      <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+          <div>
+            <h2 class="text-3xl font-bold mb-6">Contact Us</h2>
+            <p class="mb-8">Have questions, suggestions, or want to partner with us? We'd love to hear from you!</p>
+            <div class="space-y-4">
+              <div class="flex items-center">
+                <i class="fas fa-envelope w-8 text-xl"></i>
+                <span>info@jibu.go.ke</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fas fa-phone w-8 text-xl"></i>
+                <span>+254 700 123 456</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fas fa-map-marker-alt w-8 text-xl"></i>
+                <span>Teleposta Towers, Kenyatta Avenue, Nairobi</span>
+              </div>
+            </div>
+            <div class="mt-8">
+              <h3 class="font-semibold mb-4">Follow Us</h3>
+              <div class="flex space-x-4">
+                <a href="javascript:void(0)" class="bg-white text-green-600 w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-200">
+                  <i class="fab fa-twitter"></i>
+                </a>
+                <a href="javascript:void(0)" class="bg-white text-green-600 w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-200">
+                  <i class="fab fa-facebook-f"></i>
+                </a>
+                <a href="javascript:void(0)" class="bg-white text-green-600 w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-200">
+                  <i class="fab fa-instagram"></i>
+                </a>
+                <a href="javascript:void(0)" class="bg-white text-green-600 w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-200">
+                  <i class="fab fa-youtube"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+          <div>
+            <form class="bg-white p-6 rounded-lg shadow-lg text-gray-800">
+              <h3 class="text-xl font-semibold mb-4">Send Us a Message</h3>
+              <div class="mb-4">
+                <label class="block text-sm font-medium mb-1">Name</label>
+                <input type="text" class="w-full p-2 border rounded">
+              </div>
+              <div class="mb-4">
+                <label class="block text-sm font-medium mb-1">Email</label>
+                <input type="email" class="w-full p-2 border rounded">
+              </div>
+              <div class="mb-4">
+                <label class="block text-sm font-medium mb-1">Message</label>
+                <textarea rows="4" class="w-full p-2 border rounded"></textarea>
+              </div>
+              <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Send Message</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- County Map Modal -->
+  <div class="county-map" id="county-map">
+    <div class="map-container">
+      <div class="map-close" id="map-close">
+        <i class="fas fa-times"></i>
+      </div>
+      <h2 class="text-xl font-bold mb-4">Select a County</h2>
+      <div id="kenya-map" class="w-full h-96"></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="accent-bar"></div>
+    <div class="container mx-auto px-4 py-10">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div>
+          <h3 class="text-xl font-bold text-white mb-4">JIBU</h3>
+          <p class="text-gray-300 mb-4">Your trusted source for government information in Kenya.</p>
+          <div class="flex space-x-4">
+            <a href="javascript:void(0)" class="text-gray-300 hover:text-white">
+              <i class="fab fa-twitter"></i>
+            </a>
+            <a href="javascript:void(0)" class="text-gray-300 hover:text-white">
+              <i class="fab fa-facebook-f"></i>
+            </a>
+            <a href="javascript:void(0)" class="text-gray-300 hover:text-white">
+              <i class="fab fa-instagram"></i>
+            </a>
+            <a href="javascript:void(0)" class="text-gray-300 hover:text-white">
+              <i class="fab fa-youtube"></i>
+            </a>
+          </div>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold text-white mb-4">Quick Links</h3>
+          <ul class="space-y-2">
+            <li><a href="javascript:void(0)" onclick="showView('home')" class="footer-link">Home</a></li>
+            <li><a href="javascript:void(0)" onclick="showView('chat')" class="footer-link">Ask JIBU</a></li>
+            <li><a href="javascript:void(0)" onclick="showView('about')" class="footer-link">About Us</a></li>
+            <li><a href="javascript:void(0)" class="footer-link">Privacy Policy</a></li>
+            <li><a href="javascript:void(0)" class="footer-link">Terms of Service</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold text-white mb-4">Resources</h3>
+          <ul class="space-y-2">
+            <li><a href="javascript:void(0)" class="footer-link">FAQ</a></li>
+            <li><a href="javascript:void(0)" class="footer-link">User Guide</a></li>
+            <li><a href="javascript:void(0)" class="footer-link">Government Portals</a></li>
+            <li><a href="javascript:void(0)" class="footer-link">Data Sources</a></li>
+            <li><a href="javascript:void(0)" class="footer-link">API Documentation</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold text-white mb-4">Contact</h3>
+          <ul class="space-y-2">
+            <li class="flex items-start">
+              <i class="fas fa-envelope mt-1 mr-2 text-gray-400"></i>
+              <span class="footer-link">info@jibu.go.ke</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fas fa-phone mt-1 mr-2 text-gray-400"></i>
+              <span class="footer-link">+254 700 123 456</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fas fa-map-marker-alt mt-1 mr-2 text-gray-400"></i>
+              <span class="footer-link">Teleposta Towers, Kenyatta Avenue, Nairobi</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-gray-700 mt-10 pt-6 text-center text-gray-400 text-sm">
+        <p>&copy; 2025 JIBU - Just Informative, Boldly Unified. All rights reserved.</p>
+        <p class="mt-2">A project of the Government of Kenya.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script id="app-script">
+    // Current app state
+    const appState = {
+      currentView: 'home',
+      currentLanguage: 'English',
+      currentCounty: 'All Counties',
+      questionHistory: [],
+      isListening: false
+    };
+
+    // DOM Elements
+    const languageButton = document.getElementById('language-button');
+    const languageDropdown = document.getElementById('language-dropdown');
+    const countyButton = document.getElementById('county-selector-button');
+    const countyDropdown = document.getElementById('county-dropdown');
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const chatInput = document.getElementById('chat-input');
+    const sendButton = document.getElementById('send-button');
+    const micButton = document.getElementById('mic-button');
+    const historyList = document.getElementById('history-list');
+    const clearHistoryButton = document.getElementById('clear-history');
+    const answersContainer = document.getElementById('answers-container');
+    const currentCountyEl = document.getElementById('current-county');
+    const currentLanguageEl = document.getElementById('current-language');
+    const viewMapButton = document.getElementById('view-map');
+    const countyMap = document.getElementById('county-map');
+    const mapClose = document.getElementById('map-close');
+    const loadingIndicator = document.getElementById('loading-indicator');
+
+    // Initialize app
+    document.addEventListener('DOMContentLoaded', function() {
+      // Load question history from localStorage
+      loadHistory();
+      
+      // Set event listeners
+      setEventListeners();
+      
+      // Initialize Kenya map
+      initKenyaMap();
+    });
+
+    // Set all event listeners
+    function setEventListeners() {
+      // Language dropdown toggle
+      languageButton.addEventListener('click', function() {
+        languageDropdown.classList.toggle('active');
+      });
+      
+      // Close language dropdown when clicking outside
+      document.addEventListener('click', function(event) {
+        if (!languageButton.contains(event.target)) {
+          languageDropdown.classList.remove('active');
+        }
+      });
+      
+      // County dropdown toggle
+      countyButton.addEventListener('click', function() {
+        countyDropdown.classList.toggle('active');
+      });
+      
+      // Close county dropdown when clicking outside
+      document.addEventListener('click', function(event) {
+        if (!countyButton.contains(event.target) && !countyDropdown.contains(event.target)) {
+          countyDropdown.classList.remove('active');
+        }
+      });
+      
+      // Mobile menu toggle
+      mobileMenuButton.addEventListener('click', function() {
+        mobileMenu.classList.toggle('hidden');
+      });
+      
+      // Send question on button click
+      sendButton.addEventListener('click', function() {
+        sendQuestion();
+      });
+      
+      // Send question on Enter key
+      chatInput.addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+          sendQuestion();
+        }
+      });
+      
+      // Clear history button
+      clearHistoryButton.addEventListener('click', function() {
+        clearHistory();
+      });
+      
+      // Mic button
+      micButton.addEventListener('click', function() {
+        toggleSpeechRecognition();
+      });
+      
+      // View map button
+      viewMapButton.addEventListener('click', function() {
+        countyMap.classList.add('active');
+      });
+      
+      // Map close button
+      mapClose.addEventListener('click', function() {
+        countyMap.classList.remove('active');
+      });
+      
+      // Language selection
+      document.querySelectorAll('#language-dropdown button').forEach(button => {
+        button.addEventListener('click', function() {
+          const language = this.textContent.trim();
+          setLanguage(language);
+          languageDropdown.classList.remove('active');
+        });
+      });
+      
+      // County selection
+      document.querySelectorAll('#county-dropdown button').forEach(button => {
+        button.addEventListener('click', function() {
+          const county = this.textContent.trim();
+          setCounty(county);
+          countyDropdown.classList.remove('active');
+        });
+      });
+    }
+
+    // Switch between app views
+    function showView(viewName) {
+      const views = document.querySelectorAll('.app-view');
+      const navLinks = document.querySelectorAll('.navbar-link');
+      
+      // Hide all views
+      views.forEach(view => {
+        view.classList.remove('active');
+      });
+      
+      // Deactivate all nav links
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+      });
+      
+      // Show selected view
+      document.getElementById(`${viewName}-view`).classList.add('active');
+      
+      // Activate corresponding nav link
+      document.querySelector(`.navbar-link[data-view="${viewName}"]`)?.classList.add('active');
+      
+      // Update current view
+      appState.currentView = viewName;
+      
+      // Close mobile menu
+      mobileMenu.classList.add('hidden');
+      
+      // Scroll to top
+      window.scrollTo(0, 0);
+    }
+
+    // Send question function
+    function sendQuestion() {
+      const question = chatInput.value.trim();
+      
+      if (question === '') return;
+      
+      // Show loading indicator
+      loadingIndicator.style.display = 'flex';
+      
+      // Add to history
+      addToHistory(question);
+      
+      // Clear input
+      chatInput.value = '';
+      
+      // Simulate API call
+      setTimeout(() => {
+        // Generate answer (in a real app, this would come from the API)
+        const answer = getSimulatedAnswer(question);
+        
+        // Display answer
+        displayAnswer(question, answer);
+        
+        // Hide loading indicator
+        loadingIndicator.style.display = 'none';
+      }, 1500);
+    }
+
+    // Simulate answer generation
+    function getSimulatedAnswer(question) {
+      // This is a placeholder for the API call
+      return {
+        text: "This is a prototype. In the full version, you'll receive an accurate, verified answer to your question based on official government information. The answer will be provided in your selected language and will include sources to official documents.",
+        source: "https://www.example.go.ke/sample-document"
+      };
+    }
+
+    // Display answer in the UI
+    function displayAnswer(question, answer) {
+      const answerElement = document.createElement('div');
+      answerElement.className = 'answer-card p-6 fade-in';
+      
+      answerElement.innerHTML = `
+        <p class="text-lg font-medium mb-2">Q: ${question}</p>
+        <div class="text-gray-700">
+          <p class="mb-4">${answer.text}</p>
+        </div>
+        <div class="mt-4 flex justify-between items-center">
+          <a href="${answer.source}" target="_blank" class="source-link">
+            <i class="fas fa-external-link-alt mr-1"></i>Source
+          </a>
+          <button class="text-sm bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-full text-tts-button">
+            <i class="fas fa-volume-up mr-1"></i>Read Aloud
+          </button>
+        </div>
+      `;
+      
+      // Add event listener to TTS button
+      answerElement.querySelector('.text-tts-button').addEventListener('click', function() {
+        speakText(answer.text);
+      });
+      
+      // Add to answers container
+      answersContainer.prepend(answerElement);
+    }
+
+    // Set predefined query
+    function setQuery(query) {
+      chatInput.value = query;
+      setTimeout(() => {
+        sendQuestion();
+      }, 500);
+    }
+
+    // Speech recognition functions
+    function toggleSpeechRecognition() {
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        alert('Speech recognition is not supported in your browser. Please try using Chrome or Edge.');
+        return;
+      }
+      
+      if (appState.isListening) {
+        stopListening();
+      } else {
+        startListening();
+      }
+    }
+
+    function startListening() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      appState.recognition = new SpeechRecognition();
+      appState.recognition.lang = 'en-KE'; // Default to English
+      appState.recognition.continuous = false;
+      appState.recognition.interimResults = false;
+      
+      appState.recognition.onstart = function() {
+        appState.isListening = true;
+        micButton.classList.add('listening');
+        chatInput.placeholder = 'Listening...';
+      };
+      
+      appState.recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        chatInput.value = transcript;
+        stopListening();
+      };
+      
+      appState.recognition.onerror = function(event) {
+        console.error('Speech recognition error', event.error);
+        stopListening();
+      };
+      
+      appState.recognition.onend = function() {
+        stopListening();
+      };
+      
+      appState.recognition.start();
+    }
+
+    function stopListening() {
+      if (appState.recognition) {
+        appState.recognition.stop();
+      }
+      appState.isListening = false;
+      micButton.classList.remove('listening');
+      chatInput.placeholder = 'Type your question here...';
+    }
+
+    // Text-to-speech function
+    function speakText(text) {
+      if (!('speechSynthesis' in window)) {
+        alert('Text-to-speech is not supported in your browser.');
+        return;
+      }
+      
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-KE'; // Default to English
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // History management functions
+    function addToHistory(question) {
+      // Add to the beginning of the array
+      appState.questionHistory.unshift({
+        text: question,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Keep only the most recent 20 questions
+      if (appState.questionHistory.length > 20) {
+        appState.questionHistory.pop();
+      }
+      
+      // Save to localStorage
+      saveHistory();
+      
+      // Update UI
+      renderHistory();
+    }
+
+    function renderHistory() {
+      historyList.innerHTML = '';
+      
+      if (appState.questionHistory.length === 0) {
+        historyList.innerHTML = '<p class="text-gray-500 text-center py-4">No recent questions</p>';
+        return;
+      }
+      
+      appState.questionHistory.forEach((item, index) => {
+        const historyItem = document.createElement('div');
+        historyItem.className = 'history-item';
+        historyItem.textContent = item.text;
+        
+        historyItem.addEventListener('click', function() {
+          chatInput.value = item.text;
+        });
+        
+        historyList.appendChild(historyItem);
+      });
+    }
+
+    function clearHistory() {
+      appState.questionHistory = [];
+      saveHistory();
+      renderHistory();
+    }
+
+    function saveHistory() {
+      localStorage.setItem('jibu_history', JSON.stringify(appState.questionHistory));
+    }
+
+    function loadHistory() {
+      const history = localStorage.getItem('jibu_history');
+      if (history) {
+        appState.questionHistory = JSON.parse(history);
+        renderHistory();
+      }
+    }
+
+    // Set language
+    function setLanguage(language) {
+      appState.currentLanguage = language;
+      currentLanguageEl.innerHTML = `<i class="fas fa-language mr-1"></i>Language: <strong>${language}</strong>`;
+      
+      // Update language button text
+      const languageText = languageButton.querySelector('span');
+      languageText.textContent = language;
+      
+      // In a real app, this would trigger re-fetching answers in the new language
+    }
+
+    // Set county
+    function setCounty(county) {
+      appState.currentCounty = county;
+      currentCountyEl.innerHTML = `<i class="fas fa-map-marker-alt mr-1"></i>Showing answers for: <strong>${county}</strong>`;
+      
+      // In a real app, this would trigger re-fetching answers for the new county
+    }
+
+    // Initialize Kenya map
+    function initKenyaMap() {
+      // This would use the Kenya map library to render an interactive SVG map
+      const mapContainer = document.getElementById('kenya-map');
+      
+      // Placeholder for the actual map initialization
+      mapContainer.innerHTML = `
+        <div class="bg-gray-100 p-4 rounded text-center">
+          <p>This is a placeholder for the interactive Kenya county map.</p>
+          <p class="mt-4">In the full version, you would see a clickable map of all 47 counties.</p>
+          <div class="grid grid-cols-3 gap-2 mt-6 text-sm">
+            <button class="bg-white p-2 rounded shadow hover:bg-green-50">Nairobi</button>
+            <button class="bg-white p-2 rounded shadow hover:bg-green-50">Mombasa</button>
+            <button class="bg-white p-2 rounded shadow hover:bg-green-50">Kisumu</button>
+            <button class="bg-white p-2 rounded shadow hover:bg-green-50">Nakuru</button>
+            <button class="bg-white p-2 rounded shadow hover:bg-green-50">Kiambu</button>
+            <button class="bg-white p-2 rounded shadow hover:bg-green-50">Nyeri</button>
+          </div>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
